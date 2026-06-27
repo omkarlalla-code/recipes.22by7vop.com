@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipes — Login</title>
+<style>
+  body { font-family: "Times New Roman", Times, serif; max-width: 340px; margin: 80px auto; padding: 0 20px; }
+  h1 { font-size: 2em; }
+  label { display: block; margin-top: 14px; font-weight: bold; }
+  input[type=text], input[type=password] {
+    font-family: inherit; font-size: 1em;
+    width: 100%; padding: 5px; margin-top: 4px; box-sizing: border-box;
+  }
+  button { font-family: inherit; font-size: 1em; padding: 6px 20px; margin-top: 16px; cursor: pointer; }
+  #err { color: red; font-style: italic; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Recipes</h1>
+
+<label for="u">Username</label>
+<input type="text" id="u" autocomplete="username" />
+
+<label for="p">Password</label>
+<input type="password" id="p" autocomplete="current-password" />
+
+<br>
+<button onclick="login()">Sign in</button>
+
+<p id="err"></p>
+
+<script>
+var USERS = {
+  "omi":   { pass: "2009",  sheet: "omi" },
+  "mumma": { pass: "1971",  sheet: "mumma" },
+  "baba":  { pass: "1966",  sheet: "baba" }
+};
+
+function login() {
+  var u = document.getElementById("u").value.trim().toLowerCase();
+  var p = document.getElementById("p").value.trim();
+
+  if (!USERS[u] || USERS[u].pass !== p) {
+    document.getElementById("err").textContent = "Wrong username or password.";
+    return;
+  }
+
+  sessionStorage.setItem("rl_user",  u);
+  sessionStorage.setItem("rl_sheet", USERS[u].sheet);
+  window.location.href = "view.html";
+}
+
+document.getElementById("p").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") login();
+});
+
+if (sessionStorage.getItem("rl_user")) {
+  window.location.href = "view.html";
+}
+</script>
+</body>
+</html>

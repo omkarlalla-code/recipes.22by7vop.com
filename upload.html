@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add Recipe</title>
+<style>
+  body { font-family: "Times New Roman", Times, serif; max-width: 520px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 2em; margin-bottom: 4px; }
+  label { display: block; margin-top: 14px; font-weight: bold; }
+  input[type=text], input[type=url], textarea {
+    font-family: inherit; font-size: 1em;
+    width: 100%; padding: 5px; margin-top: 4px; box-sizing: border-box;
+  }
+  textarea { height: 80px; resize: vertical; }
+  button { font-family: inherit; font-size: 1em; padding: 6px 18px; margin-top: 16px; cursor: pointer; }
+  #msg { margin-top: 14px; font-style: italic; }
+  .err { color: red; }
+  .ok  { color: green; }
+  #topbar { display: flex; justify-content: space-between; align-items: baseline; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1 id="title">Add Recipe</h1>
+  <span><a href="view.html">View all</a> &nbsp; <a href="#" onclick="signOut()">Sign out</a></span>
+</div>
+
+<label for="name">Recipe name *</label>
+<input type="text" id="name" placeholder="Aloo Gobi" />
+
+<label for="url">Link to recipe *</label>
+<input type="url" id="url" placeholder="https://..." />
+
+<label for="cat">Category</label>
+<input type="text" id="cat" placeholder="Indian, Breakfast, Soups..." />
+
+<label for="notes">Notes</label>
+<textarea id="notes" placeholder="Any quick notes"></textarea>
+
+<br>
+<button onclick="submit()">Save recipe</button>
+
+<p id="msg"></p>
+
+<script>
+var API = "https://sheetdb.io/api/v1/goh18v7d4tu7u";
+
+var user  = sessionStorage.getItem("rl_user");
+var sheet = sessionStorage.getItem("rl_sheet");
+
+if (!user) { window.location.href = "index.html"; }
+
+document.getElementById("title").textContent = "Add Recipe";
+
+function submit() {
+  var name  = document.getElementById("name").value.trim();
+  var url   = document.getElementById("url").value.trim();
+  var cat   = document.getElementById("cat").value.trim();
+  var notes = document.getElementById("notes").value.trim();
+
+  if (!name) { setMsg("Name is required.", true); return; }
+  if (!url)  { setMsg("Link is required.", true); return; }
+
+  setMsg("Saving...", false);
+
+  fetch(API + "?sheet=" + encodeURIComponent(sheet), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: [{ Name: name, URL: url, Category: cat, Notes: notes }]
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
+  .then(function() {
+    setMsg("Saved.", false);
+    document.getElementById("name").value  = "";
+    document.getElementById("url").value   = "";
+    document.getElementById("cat").value   = "";
+    document.getElementById("notes").value = "";
+  })
+  .catch(function(e) {
+    setMsg("Failed to save. Try again.", true);
+    console.error(e);
+  });
+}
+
+function signOut() {
+  sessionStorage.clear();
+  window.location.href = "index.html";
+}
+
+function setMsg(text, isErr) {
+  var el = document.getElementById("msg");
+  el.textContent = text;
+  el.className = isErr ? "err" : "ok";
+}
+</script>
+</body>
+</html>

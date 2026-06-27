@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipes</title>
+<style>
+  body { font-family: "Times New Roman", Times, serif; max-width: 720px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 2em; margin-bottom: 4px; }
+  input[type=text] { font-family: inherit; font-size: 1em; padding: 4px; width: 100%; margin: 14px 0 10px; box-sizing: border-box; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { text-align: left; border-bottom: 2px solid black; padding: 6px 8px; }
+  td { border-bottom: 1px solid #ccc; padding: 8px; vertical-align: top; }
+  a { color: black; }
+  a:visited { color: #555; }
+  .cat { font-size: 0.85em; color: #444; }
+  .note { font-size: 0.85em; font-style: italic; color: #555; }
+  #status { font-style: italic; color: #666; }
+  #count { font-size: 0.9em; color: #444; margin-bottom: 6px; }
+  #topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  #topbar a { font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1 id="title">Recipes</h1>
+  <span><a href="upload.html">+ Add</a> &nbsp; <a href="#" onclick="signOut()">Sign out</a></span>
+</div>
+
+<input type="text" id="search" placeholder="Filter by name or category..." oninput="filter()" />
+
+<p id="count"></p>
+<p id="status">Loading...</p>
+
+<table id="tbl">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Category</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody id="body"></tbody>
+</table>
+
+<script>
+var API = "https://sheetdb.io/api/v1/goh18v7d4tu7u";
+var ALL = [];
+
+var user  = sessionStorage.getItem("rl_user");
+var sheet = sessionStorage.getItem("rl_sheet");
+
+if (!user) { window.location.href = "index.html"; }
+
+document.getElementById("title").textContent = user.charAt(0).toUpperCase() + user.slice(1) + "'s Recipes";
+
+function load() {
+  fetch(API + "?sheet=" + encodeURIComponent(sheet))
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      ALL = (data || []).filter(function(r) { return r.Name && r.URL; });
+      document.getElementById("status").textContent = "";
+      render(ALL);
+    })
+    .catch(function(e) {
+      document.getElementById("status").textContent = "Could not load. Check your SheetDB API URL.";
+      console.error(e);
+    });
+}
+
+function render(list) {
+  var body  = document.getElementById("body");
+  var count = document.getElementById("count");
+  body.innerHTML = "";
+
+  if (list.length === 0) {
+    count.textContent = "";
+    body.innerHTML = "<tr><td colspan='3'><em>No recipes yet. <a href='upload.html'>Add one.</a></em></td></tr>";
+    return;
+  }
+
+  count.textContent = list.length + " recipe" + (list.length === 1 ? "" : "s");
+
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i];
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td><a href='" + esc(r.URL) + "' target='_blank' rel='noopener'>" + esc(r.Name) + "</a></td>" +
+      "<td class='cat'>" + esc(r.Category || "") + "</td>" +
+      "<td class='note'>" + esc(r.Notes || "") + "</td>";
+    body.appendChild(tr);
+  }
+}
+
+function filter() {
+  var q = document.getElementById("search").value.toLowerCase();
+  if (!q) { render(ALL); return; }
+  render(ALL.filter(function(r) {
+    return (r.Name || "").toLowerCase().indexOf(q) !== -1 ||
+           (r.Category || "").toLowerCase().indexOf(q) !== -1;
+  }));
+}
+
+function signOut() {
+  sessionStorage.clear();
+  window.location.href = "index.html";
+}
+
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+load();
+</script>
+</body>
+</html>
