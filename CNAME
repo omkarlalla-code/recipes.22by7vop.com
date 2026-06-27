@@ -1,0 +1,4 @@
+echo "recipes.22by7vop.com" > CNAME
+git add CNAME
+git commit -m "add CNAME"
+git push
